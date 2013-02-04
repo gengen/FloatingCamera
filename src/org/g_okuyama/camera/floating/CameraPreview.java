@@ -17,7 +17,6 @@ package org.g_okuyama.camera.floating;
  */
 
 import android.app.AlertDialog;
-import android.content.ContentValues;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.graphics.Bitmap;
@@ -25,23 +24,17 @@ import android.hardware.Camera;
 import android.hardware.Camera.AutoFocusCallback;
 import android.hardware.Camera.Size;
 
-import android.os.Environment;
-import android.os.Handler;
-import android.provider.MediaStore.Images;
 import android.util.Log;
 import android.view.SurfaceHolder;
 
-import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Collections;
 import java.util.List;
 
 class CameraPreview implements SurfaceHolder.Callback {
-    public static final String TAG = "ContShooting";
+    public static final String TAG = "FloatingCamera";
     Camera mCamera = null;
     Context mContext = null;
 

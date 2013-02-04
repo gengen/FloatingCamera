@@ -17,7 +17,7 @@ import android.provider.MediaStore.Images;
 import android.util.Log;
 
 public class ImageAsyncTask extends AsyncTask<Bitmap, Void, Bitmap> {
-    public static final String TAG = "ContShooting";
+    public static final String TAG = "FloatingCamera";
 
     Context mContext = null;
     CameraPreview mCameraPreview;

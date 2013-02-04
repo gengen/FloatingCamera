@@ -61,20 +61,13 @@
 	</PreferenceCategory>   
 
       <PreferenceCategory android:title="@string/category_display">
-        <CheckBoxPreference 
-        	android:key="@string/display_hide"
-            android:title="@string/display_hide_title"
-        	android:summary="@string/display_hide_summary"
-        	>
-        </CheckBoxPreference>
-        
       	<ListPreference 
-    		android:key="@string/hidden_size"
-			android:title="@string/hidden_size_title"   
-    		android:dialogTitle="@string/dialog_hidden_size_title"
-			android:summary="@string/hidden_size_summary"
-			android:entries="@array/hidden_entries"
-			android:entryValues="@array/hidden_entryvalues"
+    		android:key="@string/preview_size"
+			android:title="@string/preview_size_title"   
+    		android:dialogTitle="@string/dialog_preview_size_title"
+			android:summary="@string/preview_size_summary"
+			android:entries="@array/preview_entries"
+			android:entryValues="@array/preview_entryvalues"
 			>
 		</ListPreference>
 		

@@ -1,100 +1,99 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
    android:orientation="vertical"
    android:layout_width="fill_parent"
    android:layout_height="fill_parent"
    >
 
-<FrameLayout 
-    android:id="@+id/parent"
-	android:orientation="vertical"
-   	android:layout_width="fill_parent"
-   	android:layout_height="0pt"
-   	android:layout_weight="1"	
-    android:gravity="center"
->
-
-       <FrameLayout 
-       android:id="@+id/linear"
-       android:layout_width="fill_parent"
-       android:layout_height="wrap_content"
-       >       
-       </FrameLayout>
-
-       <FrameLayout
+	<FrameLayout
        android:id="@+id/camera_parent"
        android:layout_width="fill_parent"
-       android:layout_height="wrap_content"
-		>           
+       android:layout_height="fill_parent"
+		>
        <SurfaceView
        android:id="@+id/camera"
-       android:layout_width="fill_parent"
-       android:layout_height="fill_parent"
+       android:layout_width="wrap_content"
+       android:layout_height="wrap_content"
        >
        </SurfaceView>
-       </FrameLayout>
-</FrameLayout>
+    </FrameLayout>
 
-<LinearLayout
-	android:id="@+id/adspace"
-    android:layout_width="320sp"
-    android:layout_height="50sp"
-    android:layout_gravity="center_vertical"
->
-</LinearLayout>
+	<LinearLayout
+	    android:layout_width="fill_parent"
+	    android:layout_height="wrap_content"
+	    android:layout_gravity="bottom"
+	    android:orientation="vertical"
+	    >
 
-<LinearLayout
-       android:layout_width="fill_parent"
-       android:layout_height="50sp"
-       android:orientation="horizontal"
-   	   android:gravity="bottom"
-       >
+		<LinearLayout
+			android:id="@+id/adspace"
+    		android:layout_width="fill_parent"
+    		android:layout_height="50sp"
+    		android:layout_gravity="center"
+		>
+		</LinearLayout>
+	    
+		<FrameLayout
+       		android:layout_width="fill_parent"
+       		android:layout_height="50sp"
+       		android:orientation="horizontal"
+   	   		android:background="#000000"
+       	>
     
-	   <ImageButton
-       android:id="@+id/mask_imgbtn"
-       android:src="@drawable/scale_down"
-       android:layout_height="50sp"
-       android:layout_width="50sp"
-	   android:background="@null"
-	   android:scaleType="fitXY"
-	   >
-       </ImageButton>
+       		<ImageButton 
+           		android:id="@+id/focusbtn"
+           		android:src="@drawable/focus"
+           		android:background="@null"
+	       		android:layout_height="50sp"
+    	   		android:layout_width="50sp"
+    	   		android:scaleType="fitXY"
+       		/>
        
-       <ImageButton 
-           android:id="@+id/focusbtn"
-           android:src="@drawable/focus"
-           android:background="@null"
-	       android:layout_height="50sp"
-    	   android:layout_width="50sp"
-    	   android:scaleType="fitXY"
-       />
-       
-	   <TextView
-    	android:layout_width="0pt"
-        android:layout_height="fill_parent"
-        android:layout_weight="1"
-       android:background="#00000000"
-	   >
-       </TextView>
+       		<ImageButton
+    	   		android:id="@+id/imgbtn"
+	       		android:src="@drawable/start"
+    	   		android:background="@null"
+	       		android:layout_height="50sp"
+    	   		android:layout_width="50sp"
+	       		android:layout_gravity="center"
+		   		android:scaleType="fitXY"
+       		>
+       		</ImageButton>
 
-	   <TextView
-       android:id="@+id/text1"
-       android:layout_height="fill_parent"
-       android:layout_width="wrap_content"
-       android:gravity="center"
-       android:background="#00000000"
-       android:text="" 
-       >
-       </TextView>
-	   <ImageButton
-       android:id="@+id/imgbtn"
-       android:src="@drawable/start"
-       android:background="@null"
-       android:layout_height="50sp"
-       android:layout_width="50sp"
-       android:layout_gravity="right"
-	   android:scaleType="fitXY"
-       >
-       </ImageButton>
-</LinearLayout>
-</LinearLayout>
+       		<LinearLayout
+    			android:layout_width="wrap_content"
+    			android:layout_height="wrap_content"
+    			android:layout_gravity="right"
+    		>
+       
+	   		<TextView
+	       		android:id="@+id/text1"
+    	   		android:layout_height="fill_parent"
+	       		android:layout_width="wrap_content"
+    	   		android:gravity="center_vertical"
+	       		android:background="#00000000"
+    	   		android:text="0" 
+       		>
+       		</TextView>
+       
+	   		<ImageButton 
+           		android:id="@+id/gallery"
+           		android:src="@android:drawable/ic_menu_gallery"
+           		android:background="@null"
+	       		android:layout_height="50sp"
+    	   		android:layout_width="50sp"
+    	   		android:scaleType="fitXY"
+       		/>
+       
+	   		<ImageButton 
+           		android:id="@+id/setting"
+           		android:src="@android:drawable/ic_menu_preferences"
+           		android:background="@null"
+	       		android:layout_height="50sp"
+    	   		android:layout_width="50sp"
+    	   		android:scaleType="fitXY"
+       		/>
+	   		</LinearLayout>
+		</FrameLayout>
+	</LinearLayout>
+</FrameLayout>

@@ -37,15 +37,17 @@
 <item>10</item>
 </string-array>
 
-<string-array name="hidden_entries">
-<item>Big</item>
+<string-array name="preview_entries">
+<item>Large</item>
+<item>Middle</item>
 <item>Small</item>
 <item>None</item>
 </string-array>
 
-<string-array name="hidden_entryvalues">
+<string-array name="preview_entryvalues">
 <item>1</item>
 <item>2</item>
 <item>3</item>
+<item>4</item>
 </string-array>
 </resources>

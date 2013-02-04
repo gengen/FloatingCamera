@@ -12,11 +12,11 @@ import android.preference.Preference.OnPreferenceChangeListener;
 import android.util.Log;
 
 public class FloatingCameraPreference extends PreferenceActivity implements OnPreferenceChangeListener{
-    public static final String TAG = "ContShooting";
+    public static final String TAG = "FloatingCamera";
 
     public static final String DEFAULT_SHOOT_NUM = "0";
     public static final String DEFAULT_INTERVAL = "0";
-    public static final String DEFAULT_HIDDEN_SIZE = "0";
+    public static final String DEFAULT_HIDDEN_SIZE = "2";
     
     static final int COLOR_EFFECT = 1;
     static final int SCENE_MODE = 2;
@@ -128,18 +128,21 @@ public class FloatingCameraPreference extends PreferenceActivity implements OnPr
         }
         
         //隠しモードサイズ
-        ListPreference hiddenPref = (ListPreference)this.findPreference("hidden_size");
+        ListPreference hiddenPref = (ListPreference)this.findPreference("preview_size");
         hiddenPref.setOnPreferenceChangeListener(this);
         String hiddenStr = getCurrentHiddenSize(this);
-        String summaryStr = getString(R.string.hidden_size_summary);
+        String summaryStr = getString(R.string.preview_size_summary);
         if(hiddenStr.equals("1")){
-            summaryStr = getString(R.string.hidden_size_big);
+            summaryStr = getString(R.string.preview_size_large);
         }
         else if(hiddenStr.equals("2")){
-            summaryStr = getString(R.string.hidden_size_small);            
+            summaryStr = getString(R.string.preview_size_middle);            
         }
         else if(hiddenStr.equals("3")){
-            summaryStr = getString(R.string.hidden_size_none);
+            summaryStr = getString(R.string.preview_size_small);            
+        }
+        else if(hiddenStr.equals("4")){
+            summaryStr = getString(R.string.preview_size_none);
         }
         hiddenPref.setSummary(summaryStr);
     }
@@ -162,21 +165,6 @@ public class FloatingCameraPreference extends PreferenceActivity implements OnPr
     public static String getCurrentPictureSize(Context c){
     	return /*String str = */PreferenceManager.getDefaultSharedPreferences(c)
     			.getString("picture_size", /*default*/"0");
-
-    	/*
-    	//初回起動時
-    	if(str.equals("0")){
-    		return -1;
-    	}
-    	
-    	for(int i=0; i<sSizeList.length; i++){
-    		if(sSizeList[i].equals(str)){
-    			return i;
-    		}
-    	}
-    	
-    	return 0;
-    	*/
     }
     
     public static String getCurrentShootNum(Context c){
@@ -187,11 +175,6 @@ public class FloatingCameraPreference extends PreferenceActivity implements OnPr
     public static String getCurrentInterval(Context c){
         return PreferenceManager.getDefaultSharedPreferences(c)
                 .getString("interval", /*default*/DEFAULT_INTERVAL);
-    }
-    
-    public static boolean isHidden(Context c){
-        return PreferenceManager.getDefaultSharedPreferences(c)
-                .getBoolean("display_hide", false);
     }
 
     public static String getCurrentHiddenSize(Context c){

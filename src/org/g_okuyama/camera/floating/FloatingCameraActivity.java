@@ -2,7 +2,6 @@ package org.g_okuyama.camera.floating;
 
 import java.io.File;
 import java.util.List;
-import java.util.Locale;
 
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -12,31 +11,29 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.graphics.Color;
-import android.hardware.Camera;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore.Images.Media;
 import android.util.Log;
 import android.view.Display;
+import android.view.GestureDetector;
 import android.view.Gravity;
-import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.MotionEvent;
+import android.view.ScaleGestureDetector;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
+import android.view.GestureDetector.OnGestureListener;
+import android.view.ScaleGestureDetector.SimpleOnScaleGestureListener;
 import android.view.View.OnClickListener;
-import android.view.ViewGroup.LayoutParams;
-import android.webkit.WebView;
-import android.webkit.WebViewClient;
-import android.widget.Button;
+import android.view.View.OnTouchListener;
 import android.widget.FrameLayout;
 import android.widget.ImageButton;
-import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -44,9 +41,7 @@ import android.widget.Toast;
 //import com.ad_stir.AdstirTerminate;
 
 public class FloatingCameraActivity extends Activity {
-    private static final String TAG = "ContShooting";
-    public static final String URL_JP = "http://www.yahoo.co.jp";
-    public static final String URL_OTHER = "http://www.yahoo.com";
+    private static final String TAG = "FloatingCamera";
     
     static final int MENU_DISP_GALLERY = 1;
     static final int MENU_DISP_SETTING = 2;
@@ -63,19 +58,19 @@ public class FloatingCameraActivity extends Activity {
     SurfaceHolder mHolder;
     private int mCount = 0;
     private TextView mText;
+    private Context mContext;
     private CameraPreview mPreview = null;
+    SurfaceView mSurface;
+
     //撮影中か否か（0:停止中、1：撮影中）
     public int mMode = 0;
-    private boolean mMaskFlag = false;
     private boolean mSleepFlag = false;
+    private boolean mPinchFlag = false;
     
     private ImageButton mButton = null;
-    private ImageButton mMaskButton = null;
     private ImageButton mFocusButton = null;
-    //private String mNum = null;
     private ContentResolver mResolver;
     
-    private WebView mWebView = null;
     //全体の画面サイズ
     int mWidth = 0;
     int mHeight = 0;
@@ -85,19 +80,28 @@ public class FloatingCameraActivity extends Activity {
     
     int mHiddenSizeIdx = 0;
     
+    ScaleGestureDetector mScaleGesture;    
+    protected boolean isPinch = false;   
+
+    //surfaceviewの左上の座標
+    float mSurfaceX;
+    float mSurfaceY;
+    //surfaceviewのサイズ
+    float mSurfaceWidth;
+    float mSurfaceHeight;
+    
+    float mSpanPrev = 0.0f;
+    
     //private AdstirView mAdstirView = null;
     
-    /** Called when the activity is first created. */
     @Override
     public void onCreate(Bundle savedInstanceState) {
-    	//Log.d(TAG, "enter ContShooting#onCreate");
         super.onCreate(savedInstanceState);
-        //for 2.5
         requestWindowFeature(Window.FEATURE_NO_TITLE);
         
         setContentView(R.layout.main);
+        mContext = getApplicationContext();
         
-        /*mNum = getString(R.string.sc_number);*/
         mResolver = getContentResolver();
         
         //設定値の取得
@@ -105,9 +109,6 @@ public class FloatingCameraActivity extends Activity {
         String scene = FloatingCameraPreference.getCurrentSceneMode(this);
         String white = FloatingCameraPreference.getCurrentWhiteBalance(this);
         String size = FloatingCameraPreference.getCurrentPictureSize(this);
-        mHiddenSizeIdx = Integer.parseInt(FloatingCameraPreference.getCurrentHiddenSize(this));
-        
-        //Log.d(TAG, "picsize = " + size);
         
         WindowManager wm = (WindowManager)getSystemService(Context.WINDOW_SERVICE);
         Display disp = wm.getDefaultDisplay();
@@ -115,22 +116,40 @@ public class FloatingCameraActivity extends Activity {
         mHeight = disp.getHeight();
         
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
-        SurfaceView sv = (SurfaceView)findViewById(R.id.camera);
-        mHolder = sv.getHolder();
+        mSurface = (SurfaceView)findViewById(R.id.camera);
+        mHolder = mSurface.getHolder();
         
         /*
-        //画面下方にあるViewの高さを取得
-        LinearLayout bottom = (LinearLayout)findViewById(R.id.bottom_view);
-        int margin = bottom.getHeight();
+         * プレビューサイズ設定
+         * 大=4/5, 中=1/2, 小=1/4, 無し=1*1
+         */
+        int hide_width = 0;
+        int hide_height = 0;
+        mHiddenSizeIdx = Integer.parseInt(FloatingCameraPreference.getCurrentHiddenSize(this));
+        switch(mHiddenSizeIdx){
+            case 1:
+                hide_width = mWidth * (4/5);
+                hide_height = hide_width / 3 * 4;
+                break;
 
-        //初期画面表示(全体の高さの3/4をプレビューサイズの初期値とする)
-        FrameLayout frame = (FrameLayout)findViewById(R.id.camera_parent);
-        //int margin = mHeight / 4;
-        mPrevHeight = mHeight - margin;
-        mPrevWidth = (mPrevHeight / 3) * 4;
-        frame.setLayoutParams(new FrameLayout.LayoutParams(mPrevWidth, mPrevHeight, Gravity.CENTER_HORIZONTAL));
-        */
+            case 2:
+                hide_width = mWidth / 2;
+                hide_height = hide_width / 3 * 4;
+                break;
 
+            case 3:
+                hide_width = mWidth / 4;
+                hide_height = hide_width / 3 * 4;
+                break;
+                
+            case 4:
+                hide_height = 1;
+                hide_width = 1;            
+                break;                
+        }
+
+        mSurface.setLayoutParams(new FrameLayout.LayoutParams(hide_width, hide_height, Gravity.CENTER));
+        
         mPreview = new CameraPreview(this);
         mPreview.setField(effect, scene, white, size, mWidth, mHeight);
         mHolder.addCallback(mPreview);
@@ -152,7 +171,134 @@ public class FloatingCameraActivity extends Activity {
         }
 
         //register UI Listener
-    	setListener();        
+    	setListener();
+    	
+        mScaleGesture = new ScaleGestureDetector(this, new MySimpleOnScaleGestureListener());
+        //SurfaceView上でタッチしたときのみViewを動かせる
+        mSurface.setOnTouchListener(new MyOnTouchListener());        
+    }
+    
+    class MyOnTouchListener implements OnTouchListener{
+        @Override
+        public boolean onTouch(View view, MotionEvent event) {
+            //Log.d(TAG, "onTouch");
+
+            //指の数によって呼ばれるリスナを変更
+            int num = event.getPointerCount();
+            if(num == 1){
+                mGesture.onTouchEvent(event);
+            }
+            else if(num == 2){
+                mScaleGesture.onTouchEvent(event);
+
+                if(!mPinchFlag){
+                    return true;
+                }
+                /*
+                Log.d(TAG, "width=" + view.getWidth() + ",height=" + view.getHeight());
+                Log.d(TAG, "x1=" + event.getX(0) + ",y1=" + event.getY(0));
+                Log.d(TAG, "x2=" + event.getX(1) + ",y2=" + event.getY(1));
+                Log.d(TAG, "rawx=" + event.getRawX() + ",rawy=" + event.getRawY());
+                */
+
+                //タッチの座標と現在のViewの大きさから左上の座標を求める(view.getX/getYはAPIレベル11からのため他の方法で行う)
+                //float curWidth = view.getWidth();
+                //float curHeight = view.getHeight();
+                mSurfaceWidth = Math.abs(event.getX(1) - event.getX(0));
+                mSurfaceHeight = Math.abs(event.getY(1) - event.getY(0));
+                mSurfaceX = event.getRawX();
+                mSurfaceY = event.getRawY() - mSurfaceHeight;
+                //Log.d(TAG, "curWidth=" + curWidth + ",curHeight=" + curHeight);
+                //Log.d(TAG, "mSurfaceX=" + mSurfaceX + ",mSurfaceY=" + mSurfaceY);
+                //Log.d(TAG, "mSurfaceWidth=" + mSurfaceWidth + ",mSurfaceHeight=" + mSurfaceHeight);
+            }               
+
+            //return event.getPointerCount() == 1 ? mGesture.onTouchEvent(event) : mScaleGesture.onTouchEvent(event);
+            return true;
+        }
+    }
+    
+    //ドラッグアンドドロップ用
+    GestureDetector mGesture = new GestureDetector(mContext, new OnGestureListener(){
+        int offsetX;
+        int offsetY;
+        int currentX;
+        int currentY;
+
+        @Override
+        public boolean onDown(MotionEvent e) {
+            offsetX = (int) e.getRawX();
+            offsetY = (int) e.getRawY();
+            return true;
+        }
+
+        @Override
+        public void onShowPress(MotionEvent e) {
+        }
+
+        @Override
+        public boolean onSingleTapUp(MotionEvent e) {
+            return false;
+        }
+
+        @Override
+        public boolean onScroll(MotionEvent e1, MotionEvent e2,
+                float distanceX, float distanceY) {
+            int x = (int) e2.getRawX();
+            int y = (int) e2.getRawY();
+            int diffX = offsetX - x;
+            int diffY = offsetY - y;
+
+            currentX -= diffX;
+            currentY -= diffY;
+            mSurface.layout(currentX, currentY,
+                    currentX + mSurface.getWidth(),
+                    currentY + mSurface.getHeight());
+
+            offsetX = x;
+            offsetY = y;
+            return true;
+        }
+
+        @Override
+        public void onLongPress(MotionEvent e) {
+        }
+
+        @Override
+        public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX,
+                float velocityY) {
+            return false;
+        }
+
+    });
+
+    class MySimpleOnScaleGestureListener extends SimpleOnScaleGestureListener {   
+        @Override  
+        public boolean onScale(ScaleGestureDetector detector) {   
+            //Log.d(TAG, "onScale");
+            // 2つの指の距離を使って遊びを持たせる（一定の距離以下ならピンチとみなさない）
+            float spanCurr = detector.getCurrentSpan();   
+            if (Math.abs(spanCurr - mSpanPrev) < 30) {   
+                return false;   
+            }
+            
+            mPinchFlag = true;
+
+            mSurface.layout(
+                    (int)mSurfaceX,
+                    (int)mSurfaceY,
+                    (int)mSurfaceX + (int)mSurfaceWidth,
+                    (int)mSurfaceY + (int)mSurfaceHeight);
+
+            mSpanPrev = spanCurr; 
+            return super.onScale(detector);
+        }
+
+        @Override
+        public boolean onScaleBegin(ScaleGestureDetector detector) {
+            //Log.d(TAG, "onScaleBegin");
+            return super.onScaleBegin(detector);
+        }
     }
     
     private void setListener(){
@@ -165,29 +311,13 @@ public class FloatingCameraActivity extends Activity {
 						mMode = 1;
                         //フォーカスボタンを見えなくする
                         mFocusButton.setVisibility(View.INVISIBLE);
-                        mMaskButton.setVisibility(View.INVISIBLE);
 					}
 					else{
 						mPreview.stopShooting();
 						mMode = 0;
                         //フォーカスボタンを見えるようにする
                         mFocusButton.setVisibility(View.VISIBLE);
-                        mMaskButton.setVisibility(View.VISIBLE);
 					}
-				}
-			}
-        });
-        
-        mMaskButton = (ImageButton)findViewById(R.id.mask_imgbtn);
-        mMaskButton.setOnClickListener(new OnClickListener(){
-			public void onClick(View v) {
-				if(mPreview != null){
-                    if(mMaskFlag){
-                        setToNormal();
-                    }
-                    else{
-                        setToHidden();
-                    }
 				}
 			}
         });
@@ -200,77 +330,8 @@ public class FloatingCameraActivity extends Activity {
 				}
 			}
         });
-        
-        if(FloatingCameraPreference.isHidden(this)){
-            setToHidden();
-        }
     }
-    
-    public void setToNormal(){
-        FrameLayout layout = (FrameLayout)findViewById(R.id.linear);
-        layout.removeView(mWebView);
-        layout.setLayoutParams(new FrameLayout.LayoutParams(
-                FrameLayout.LayoutParams.FILL_PARENT, 
-                FrameLayout.LayoutParams.WRAP_CONTENT));
-        mWebView.setWebViewClient(null);
-        mWebView.destroy();
-        mWebView = null;
-
-        FrameLayout frame = (FrameLayout)findViewById(R.id.camera_parent);
-        frame.setLayoutParams(new FrameLayout.LayoutParams(mPrevWidth, mPrevHeight, Gravity.CENTER_HORIZONTAL));
-
-        displayNormalMode();
-        mMaskFlag = false;
-        setTitle(R.string.app_name);
-    }
-    
-    public void setToHidden(){
-        mWebView = new WebView(this);
-        mWebView.setWebViewClient(new WebViewClient());
-        mWebView.getSettings().setJavaScriptEnabled(true);
-        mWebView.getSettings().setBuiltInZoomControls(true);
-        mWebView.getSettings().setAppCacheEnabled(false);
-        FrameLayout layout = (FrameLayout)findViewById(R.id.linear);
-        layout.setLayoutParams(new FrameLayout.LayoutParams(
-                FrameLayout.LayoutParams.FILL_PARENT, 
-                FrameLayout.LayoutParams.WRAP_CONTENT, 
-                1));
-        layout.addView(mWebView);
         
-        if(Locale.getDefault().equals(Locale.JAPAN)){
-            mWebView.loadUrl(URL_JP);
-        }
-        else{
-            mWebView.loadUrl(URL_OTHER);
-        }
-
-    	FrameLayout frame = (FrameLayout)findViewById(R.id.camera_parent);
-    	/*
-        int hide_height = mHeight / 6;
-        int hide_width = hide_height / 3 * 4;
-        */
-    	/*
-    	 * 隠しモードのプレビューサイズ設定
-    	 * 大=1/4, 小=1/6, 無し=1*1
-    	 */
-    	int denom = 6;
-        if(mHiddenSizeIdx == 1){
-            denom = 4;
-        }
-        int hide_height = mHeight / denom;
-        int hide_width = hide_height / 3 * 4;
-
-        if(mHiddenSizeIdx == 3){
-            hide_height = 1;
-            hide_width = 1;            
-        }
-        frame.setLayoutParams(new FrameLayout.LayoutParams(hide_width, hide_height, Gravity.BOTTOM));
-        
-        displayHideMode();
-        mMaskFlag = true;
-        setTitle(R.string.sc_hidden);        
-}
-    
     public void onStart(){
     	//Log.d(TAG, "enter ContShooting#onStart");
     	
@@ -321,12 +382,6 @@ public class FloatingCameraActivity extends Activity {
     }
     
     private void startGallery(){
-    	//ギャラリーへのintent
-    	//Intent intent = new Intent(Intent.ACTION_PICK);
-    	//intent.setType("image/*");
-    	//startActivityForResult(intent, REQUEST_PICK_CONTACT);
-    	//startActivity(intent);
-    	
     	// ギャラリー表示
     	Intent intent = null;
     	try{
@@ -383,7 +438,6 @@ public class FloatingCameraActivity extends Activity {
             effectList = mPreview.getEffectList();
         }
         if(effectList != null){
-        	//Log.d(TAG, "effect = " + (String[])effectList.toArray(new String[0]));
             pref_intent.putExtra("effect", (String[])effectList.toArray(new String[0]));
         }
 
@@ -393,7 +447,6 @@ public class FloatingCameraActivity extends Activity {
             sceneList = mPreview.getSceneModeList();
         }
         if(sceneList != null){
-            //Log.d(TAG, "scene = " + (String[])sceneList.toArray(new String[0]));
             pref_intent.putExtra("scene", (String[])sceneList.toArray(new String[0]));
         }
 
@@ -403,7 +456,6 @@ public class FloatingCameraActivity extends Activity {
             whiteList = mPreview.getWhiteBalanceList();
         }
         if(whiteList != null){
-            //Log.d(TAG, "white = " + (String[])whiteList.toArray(new String[0]));
             pref_intent.putExtra("white", (String[])whiteList.toArray(new String[0]));
         }
         
@@ -413,7 +465,6 @@ public class FloatingCameraActivity extends Activity {
             sizeList = mPreview.getSizeList();
         }
         if(sizeList != null){
-            //Log.d(TAG, "size = " + (String[])sizeList.toArray(new String[0]));
             pref_intent.putExtra("size", (String[])sizeList.toArray(new String[0]));
         }
         
@@ -458,17 +509,13 @@ public class FloatingCameraActivity extends Activity {
             }
             if(resultCode == RESPONSE_HIDDEN_SIZE){
                 //隠しモードサイズ設定
-                mHiddenSizeIdx = data.getIntExtra("hidden_size", 0);
-                //隠しモードの場合は、一旦戻す
-                if(mMaskFlag){
-                    setToNormal();
-                }
+                mHiddenSizeIdx = data.getIntExtra("preview_size", 0);
             }
         }
     }
     
     public void count(){
-    	mText.setText(/*mNum + System.getProperty("line.separator") + */Integer.toString(++mCount) + " ");
+    	mText.setText(Integer.toString(++mCount) + " ");
     }
     
     public void displayStart(){
@@ -479,24 +526,12 @@ public class FloatingCameraActivity extends Activity {
         mButton.setImageResource(R.drawable.stop);
     }
     
-    void displayHideMode(){
-        mMaskButton.setImageResource(R.drawable.scale_up);
-    }
-    
-    void displayNormalMode(){
-        mMaskButton.setImageResource(R.drawable.scale_down);
-    }
-    
     public void saveGallery(ContentValues values){
 		mResolver.insert(Media.EXTERNAL_CONTENT_URI, values);
     }
     
     public void setMode(int mode){
         mMode = mode;
-    }
-    
-    public boolean isMask(){
-        return mMaskFlag;
     }
     
     protected void onPause(){
@@ -547,32 +582,10 @@ public class FloatingCameraActivity extends Activity {
     }
     
     protected void onRestart(){
-    	//Log.d(TAG, "enter ContShooting#onRestart");
     	super.onRestart();
     }
     
     public void finish(){
-        //Log.d(TAG, "enter ContShooting#finish");
-    	/*
-    	new AlertDialog.Builder(this)
-    	.setTitle(R.string.pi_finish)
-    	.setMessage(getString(R.string.pi_finish_confirm))
-    	.setPositiveButton(R.string.pi_ok, new DialogInterface.OnClickListener() {
-			public void onClick(DialogInterface dialog, int which) {
-				System.exit(RESULT_OK);
-			}
-		})
-		.setNegativeButton(R.string.pi_ng, new DialogInterface.OnClickListener() {
-			public void onClick(DialogInterface dialog, int which) {
-				return;
-			}
-		})
-		.show();
-		*/
-
-        //アプリのキャッシュ削除
-        //deleteCache(getCacheDir());
-        
 		System.exit(RESULT_OK);
     }
     
