@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">cont. shootin\'</string>
+    <string name="app_name">Floating Camera</string>
     <string name="sc_hidden">Hidden mode now</string>
     <string name="sc_menu_gallery">gallery</string>
     <string name="sc_menu_gallery_ng">Coundn\'t launch gallery.</string>

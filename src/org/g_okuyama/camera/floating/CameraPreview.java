@@ -206,6 +206,11 @@ class CameraPreview implements SurfaceHolder.Callback {
     public void surfaceChanged(SurfaceHolder holder, int format, int w, int h) {
         //Log.d(TAG, "enter CameraPreview#surfaceChanged");
         
+        //ƒsƒ“ƒ`’†‚Í”²‚¯‚é
+        if(((FloatingCameraActivity)mContext).isPinch){
+            return;
+        }
+        
         //Camera‚ªopen()‚Å‚«‚È‚©‚Á‚½‚Æ‚«—p
         if(mCamera == null){
             return;
@@ -429,8 +434,8 @@ class CameraPreview implements SurfaceHolder.Callback {
     
     void release(){
         if(mCamera != null){
-            mCamera.setPreviewCallback(null);
             mCamera.stopPreview();
+            //mCamera.setPreviewCallback(null);
             mCamera.release();
             mCamera = null;
         }
@@ -448,7 +453,6 @@ class CameraPreview implements SurfaceHolder.Callback {
     		return ((Size) t).width - ((Size) s).width;
     	}
     }
-
     
     public class PreviewCallback implements Camera.PreviewCallback {
         private CameraPreview mPreview = null;

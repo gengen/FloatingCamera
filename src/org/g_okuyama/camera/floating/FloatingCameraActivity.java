@@ -53,9 +53,8 @@ public class FloatingCameraActivity extends Activity {
     static final int RESPONSE_PICTURE_SIZE = 4;
     static final int RESPONSE_SHOOT_NUM = 5;
     static final int RESPONSE_INTERVAL = 6;
-    static final int RESPONSE_HIDDEN_SIZE = 7;
+    static final int RESPONSE_PREVIEW_SIZE = 7;
     
-    SurfaceHolder mHolder;
     private int mCount = 0;
     private TextView mText;
     private Context mContext;
@@ -65,24 +64,23 @@ public class FloatingCameraActivity extends Activity {
     //撮影中か否か（0:停止中、1：撮影中）
     public int mMode = 0;
     private boolean mSleepFlag = false;
+    //ピンチと判断するかのフラグ
     private boolean mPinchFlag = false;
+    //ピンチ中フラグ
+    public boolean isPinch = false;
+    //ピンチが終了したときのフラグ
+    private boolean mScaleEndFlag = false;
     
     private ImageButton mButton = null;
     private ImageButton mFocusButton = null;
+    private ImageButton mGalleryButton = null;
+    private ImageButton mSettingButton = null;
     private ContentResolver mResolver;
     
     //全体の画面サイズ
     int mWidth = 0;
     int mHeight = 0;
-    //プレビュー枠のサイズ
-    int mPrevWidth = 0;
-    int mPrevHeight = 0;
     
-    int mHiddenSizeIdx = 0;
-    
-    ScaleGestureDetector mScaleGesture;    
-    protected boolean isPinch = false;   
-
     //surfaceviewの左上の座標
     float mSurfaceX;
     float mSurfaceY;
@@ -90,6 +88,7 @@ public class FloatingCameraActivity extends Activity {
     float mSurfaceWidth;
     float mSurfaceHeight;
     
+    ScaleGestureDetector mScaleGesture;
     float mSpanPrev = 0.0f;
     
     //private AdstirView mAdstirView = null;
@@ -117,43 +116,16 @@ public class FloatingCameraActivity extends Activity {
         
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
         mSurface = (SurfaceView)findViewById(R.id.camera);
-        mHolder = mSurface.getHolder();
+        SurfaceHolder holder = mSurface.getHolder();
         
-        /*
-         * プレビューサイズ設定
-         * 大=4/5, 中=1/2, 小=1/4, 無し=1*1
-         */
-        int hide_width = 0;
-        int hide_height = 0;
-        mHiddenSizeIdx = Integer.parseInt(FloatingCameraPreference.getCurrentHiddenSize(this));
-        switch(mHiddenSizeIdx){
-            case 1:
-                hide_width = mWidth * (4/5);
-                hide_height = hide_width / 3 * 4;
-                break;
-
-            case 2:
-                hide_width = mWidth / 2;
-                hide_height = hide_width / 3 * 4;
-                break;
-
-            case 3:
-                hide_width = mWidth / 4;
-                hide_height = hide_width / 3 * 4;
-                break;
-                
-            case 4:
-                hide_height = 1;
-                hide_width = 1;            
-                break;                
-        }
-
-        mSurface.setLayoutParams(new FrameLayout.LayoutParams(hide_width, hide_height, Gravity.CENTER));
+        //プレビューサイズ設定
+        int idx = Integer.parseInt(FloatingCameraPreference.getCurrentPreviewSize(this));
+        setPreviewSize(idx);
         
         mPreview = new CameraPreview(this);
         mPreview.setField(effect, scene, white, size, mWidth, mHeight);
-        mHolder.addCallback(mPreview);
-        mHolder.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
+        holder.addCallback(mPreview);
+        holder.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
 
         mText = (TextView)findViewById(R.id.text1);
     	mText.setText(/*mNum + System.getProperty("line.separator") + */"0" + " ");
@@ -171,11 +143,99 @@ public class FloatingCameraActivity extends Activity {
         }
 
         //register UI Listener
-    	setListener();
-    	
+    	setListener();    	
+    }
+    
+    private void setListener(){
         mScaleGesture = new ScaleGestureDetector(this, new MySimpleOnScaleGestureListener());
         //SurfaceView上でタッチしたときのみViewを動かせる
         mSurface.setOnTouchListener(new MyOnTouchListener());        
+
+        mButton = (ImageButton)findViewById(R.id.imgbtn);
+        mButton.setOnClickListener(new OnClickListener(){
+            public void onClick(View v) {
+                if(mPreview != null){
+                    if(mMode == 0){
+                        mPreview.resumeShooting();
+                        mMode = 1;
+                        //撮影中は他のボタンを見えなくする
+                        mFocusButton.setVisibility(View.INVISIBLE);
+                        mGalleryButton.setVisibility(View.INVISIBLE);
+                        mSettingButton.setVisibility(View.INVISIBLE);
+                    }
+                    else{
+                        mPreview.stopShooting();
+                        mMode = 0;
+                        //他のボタンを見えるようにする
+                        mFocusButton.setVisibility(View.VISIBLE);
+                        mGalleryButton.setVisibility(View.VISIBLE);
+                        mSettingButton.setVisibility(View.VISIBLE);
+                    }
+                }
+            }
+        });
+        
+        mFocusButton = (ImageButton)findViewById(R.id.focusbtn);
+        mFocusButton.setOnClickListener(new OnClickListener(){
+            public void onClick(View v) {
+                if(mPreview != null){
+                        mPreview.doAutoFocus();
+                }
+            }
+        });
+        
+        mGalleryButton = (ImageButton)findViewById(R.id.gallery);
+        mGalleryButton.setOnClickListener(new OnClickListener(){
+            public void onClick(View v) {
+                if(mPreview != null){
+                    startGallery();
+                }
+            }
+        });
+        
+        mSettingButton = (ImageButton)findViewById(R.id.setting);
+        mSettingButton.setOnClickListener(new OnClickListener(){
+            public void onClick(View v) {
+                if(mPreview != null){
+                    displaySettings();
+                }
+            }
+        });
+    }
+    
+    /*
+     * プレビューサイズ設定
+     * 大=4/5, 中=2/3(default), 小=1/3, 無し=1*1
+     */
+    private void setPreviewSize(int idx){
+        int hide_width = 0;
+        int hide_height = 0;
+        switch(idx){
+            case 1:
+                hide_width = mWidth * 4 / 5;
+                hide_height = hide_width / 3 * 4;
+                break;
+
+            case 2:
+                hide_width = mWidth * 2 / 3;
+                hide_height = hide_width / 3 * 4;
+                break;
+
+            case 3:
+                hide_width = mWidth / 3;
+                hide_height = hide_width / 3 * 4;
+                break;
+                
+            case 4:
+                hide_height = 1;
+                hide_width = 1;            
+                break;                
+        }
+        
+        //Log.d(TAG, "idx = " + idx);
+        //Log.d(TAG, "width = " + hide_width + ",height = " + hide_height);
+
+        mSurface.setLayoutParams(new FrameLayout.LayoutParams(hide_width, hide_height, Gravity.CENTER));
     }
     
     class MyOnTouchListener implements OnTouchListener{
@@ -191,9 +251,11 @@ public class FloatingCameraActivity extends Activity {
             else if(num == 2){
                 mScaleGesture.onTouchEvent(event);
 
+                /*
                 if(!mPinchFlag){
                     return true;
                 }
+                */
                 /*
                 Log.d(TAG, "width=" + view.getWidth() + ",height=" + view.getHeight());
                 Log.d(TAG, "x1=" + event.getX(0) + ",y1=" + event.getY(0));
@@ -206,12 +268,34 @@ public class FloatingCameraActivity extends Activity {
                 //float curHeight = view.getHeight();
                 mSurfaceWidth = Math.abs(event.getX(1) - event.getX(0));
                 mSurfaceHeight = Math.abs(event.getY(1) - event.getY(0));
-                mSurfaceX = event.getRawX();
-                mSurfaceY = event.getRawY() - mSurfaceHeight;
+                if(event.getX(1) - event.getX(0) >= 0){
+                    if(event.getY(1) - event.getY(0) >= 0){
+                        //getRawが左上
+                        mSurfaceX = event.getRawX();
+                        mSurfaceY = event.getRawY();                        
+                    }
+                    else{
+                        //getRawが左下
+                        mSurfaceX = event.getRawX();
+                        mSurfaceY = event.getRawY() - mSurfaceHeight;
+                    }
+                }
+                else{
+                    if(event.getY(1) - event.getY(0) >= 0){
+                        //getRawが右上
+                        mSurfaceX = event.getRawX() - mSurfaceWidth;
+                        mSurfaceY = event.getRawY();
+                    }
+                    else{
+                        //getRawが右下
+                        mSurfaceX = event.getRawX() - mSurfaceWidth;
+                        mSurfaceY = event.getRawY() - mSurfaceHeight;                        
+                    }
+                }
                 //Log.d(TAG, "curWidth=" + curWidth + ",curHeight=" + curHeight);
                 //Log.d(TAG, "mSurfaceX=" + mSurfaceX + ",mSurfaceY=" + mSurfaceY);
                 //Log.d(TAG, "mSurfaceWidth=" + mSurfaceWidth + ",mSurfaceHeight=" + mSurfaceHeight);
-            }               
+            }
 
             //return event.getPointerCount() == 1 ? mGesture.onTouchEvent(event) : mScaleGesture.onTouchEvent(event);
             return true;
@@ -222,13 +306,12 @@ public class FloatingCameraActivity extends Activity {
     GestureDetector mGesture = new GestureDetector(mContext, new OnGestureListener(){
         int offsetX;
         int offsetY;
-        int currentX;
-        int currentY;
 
         @Override
         public boolean onDown(MotionEvent e) {
             offsetX = (int) e.getRawX();
             offsetY = (int) e.getRawY();
+            //Log.d(TAG, "offset = " + offsetX + "," + offsetY);
             return true;
         }
 
@@ -244,16 +327,35 @@ public class FloatingCameraActivity extends Activity {
         @Override
         public boolean onScroll(MotionEvent e1, MotionEvent e2,
                 float distanceX, float distanceY) {
+            //ピンチが終わった後のonScrollは1回飛ばす
+            if(mScaleEndFlag){
+                mScaleEndFlag = false;
+                return true;
+            }
+
             int x = (int) e2.getRawX();
             int y = (int) e2.getRawY();
             int diffX = offsetX - x;
             int diffY = offsetY - y;
+            
+            /*
+            Log.d(TAG, "offset2 = " + offsetX + "," + offsetY);
+            Log.d(TAG, "cur1 = " + x + "," + y);
+            Log.d(TAG, "cur2 = " + (int)e1.getRawX() + "," + (int)e1.getRawY());
+            Log.d(TAG, "diff = " + diffX + "," + diffY);
+            Log.d(TAG, "size = " + mSurface.getWidth() + "," + mSurface.getHeight());
+            */
+            
+            //SurfaceViewの左上の座標を求める
+            int curX = (int)(x - e2.getX());
+            int curY = (int)(y - e2.getY());
 
-            currentX -= diffX;
-            currentY -= diffY;
-            mSurface.layout(currentX, currentY,
-                    currentX + mSurface.getWidth(),
-                    currentY + mSurface.getHeight());
+            curX -= diffX;
+            curY -= diffY;
+            mSurface.layout(curX, curY,
+                    curX + mSurface.getWidth(),
+                    curY + mSurface.getHeight());
+            //Log.d(TAG, "layout = " + curX + "," + curY + "," + mSurface.getWidth() + "," + mSurface.getHeight());            
 
             offsetX = x;
             offsetY = y;
@@ -275,63 +377,49 @@ public class FloatingCameraActivity extends Activity {
     class MySimpleOnScaleGestureListener extends SimpleOnScaleGestureListener {   
         @Override  
         public boolean onScale(ScaleGestureDetector detector) {   
-            //Log.d(TAG, "onScale");
+            Log.d(TAG, "onScale");
             // 2つの指の距離を使って遊びを持たせる（一定の距離以下ならピンチとみなさない）
-            float spanCurr = detector.getCurrentSpan();   
+            /*
+            float spanCurr = detector.getCurrentSpan();
             if (Math.abs(spanCurr - mSpanPrev) < 30) {   
                 return false;   
             }
+            */
             
-            mPinchFlag = true;
+            //mPinchFlag = true;
 
             mSurface.layout(
                     (int)mSurfaceX,
                     (int)mSurfaceY,
                     (int)mSurfaceX + (int)mSurfaceWidth,
                     (int)mSurfaceY + (int)mSurfaceHeight);
+            //Log.d(TAG, "layoutScale = " + mSurfaceX + "," + mSurfaceY + "," + mSurfaceX+mSurfaceWidth + "," + mSurfaceY+mSurfaceHeight);            
 
-            mSpanPrev = spanCurr; 
+            //mSpanPrev = spanCurr; 
             return super.onScale(detector);
         }
 
         @Override
         public boolean onScaleBegin(ScaleGestureDetector detector) {
-            //Log.d(TAG, "onScaleBegin");
+            Log.d(TAG, "onScaleBegin");
+            isPinch = true;
             return super.onScaleBegin(detector);
+        }
+
+        @Override
+        public void onScaleEnd(ScaleGestureDetector detector) {
+            isPinch = false;
+            /*
+             * ピンチが終わったことを示す。
+             * この後にGestureDetectorのonScrollが呼ばれる時があり、
+             * レイアウトが崩れてしまう現象が発生するため、このフラグを立て、
+             * 次回のonScrollではレイアウトを変更しないようにする。
+             */
+            mScaleEndFlag = true;
+            Log.d(TAG, "onScaleEnd");
         }
     }
     
-    private void setListener(){
-        mButton = (ImageButton)findViewById(R.id.imgbtn);
-        mButton.setOnClickListener(new OnClickListener(){
-			public void onClick(View v) {
-				if(mPreview != null){
-					if(mMode == 0){
-						mPreview.resumeShooting();
-						mMode = 1;
-                        //フォーカスボタンを見えなくする
-                        mFocusButton.setVisibility(View.INVISIBLE);
-					}
-					else{
-						mPreview.stopShooting();
-						mMode = 0;
-                        //フォーカスボタンを見えるようにする
-                        mFocusButton.setVisibility(View.VISIBLE);
-					}
-				}
-			}
-        });
-        
-        mFocusButton = (ImageButton)findViewById(R.id.focusbtn);
-        mFocusButton.setOnClickListener(new OnClickListener(){
-			public void onClick(View v) {
-				if(mPreview != null){
-						mPreview.doAutoFocus();
-				}
-			}
-        });
-    }
-        
     public void onStart(){
     	//Log.d(TAG, "enter ContShooting#onStart");
     	
@@ -382,6 +470,13 @@ public class FloatingCameraActivity extends Activity {
     }
     
     private void startGallery(){
+        //明示的intentだとカメラが落ちる場合があったため、暗黙intentに変更
+        Intent intent = new Intent();
+        intent.setType("image/*");
+        intent.setAction(Intent.ACTION_GET_CONTENT);
+        startActivity(intent);
+
+        /*
     	// ギャラリー表示
     	Intent intent = null;
     	try{
@@ -427,6 +522,7 @@ public class FloatingCameraActivity extends Activity {
     	        }
     	    }
     	}
+    	*/
     }
     
     private void displaySettings(){
@@ -507,9 +603,9 @@ public class FloatingCameraActivity extends Activity {
                     mPreview.setInterval(data.getIntExtra("interval", 0));
                 }
             }
-            if(resultCode == RESPONSE_HIDDEN_SIZE){
-                //隠しモードサイズ設定
-                mHiddenSizeIdx = data.getIntExtra("preview_size", 0);
+            if(resultCode == RESPONSE_PREVIEW_SIZE){
+                int idx = data.getIntExtra("preview_size", 0);
+                setPreviewSize(idx);
             }
         }
     }
@@ -535,7 +631,7 @@ public class FloatingCameraActivity extends Activity {
     }
     
     protected void onPause(){
-        //Log.d(TAG, "enter ContShooting#onPause");    	
+        Log.d(TAG, "enter ContShooting#onPause");
     	super.onPause();
     	
     	if(mSleepFlag){
@@ -546,13 +642,21 @@ public class FloatingCameraActivity extends Activity {
         if(mPreview != null){
             mPreview.release();
         }
+        
+        mCount = 0;
+        mText.setText("0" + " ");
+        mFocusButton.setVisibility(View.VISIBLE);
+        mGalleryButton.setVisibility(View.VISIBLE);
+        mSettingButton.setVisibility(View.VISIBLE);
     	
         //アプリのキャッシュ削除
-        deleteCache(getCacheDir());    	
+        //deleteCache(getCacheDir());
     }
     
     protected void onResume(){
         super.onResume();
+        
+        Log.d(TAG, "onResume");
         
         //adstir設定→onCreateからonResumeに移動
         /*
@@ -560,7 +664,7 @@ public class FloatingCameraActivity extends Activity {
         LinearLayout layout = (LinearLayout)findViewById(R.id.adspace);
         layout.addView(mAdstirView);
         */
-        
+                
         if(FloatingCameraPreference.isSleepMode(this)){
             if(!mSleepFlag){
                 getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
@@ -576,7 +680,7 @@ public class FloatingCameraActivity extends Activity {
     }
     
     protected void onDestroy(){
-        //Log.d(TAG, "enter ContShooting#onDestroy");
+        Log.d(TAG, "enter ContShooting#onDestroy");
     	super.onDestroy();
     	//AdstirTerminate.init(this);
     }

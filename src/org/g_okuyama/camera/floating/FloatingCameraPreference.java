@@ -16,7 +16,7 @@ public class FloatingCameraPreference extends PreferenceActivity implements OnPr
 
     public static final String DEFAULT_SHOOT_NUM = "0";
     public static final String DEFAULT_INTERVAL = "0";
-    public static final String DEFAULT_HIDDEN_SIZE = "2";
+    public static final String DEFAULT_PREVIEW_SIZE = "2";
     
     static final int COLOR_EFFECT = 1;
     static final int SCENE_MODE = 2;
@@ -24,7 +24,7 @@ public class FloatingCameraPreference extends PreferenceActivity implements OnPr
     static final int PICTURE_SIZE = 4;
     static final int SHOOT_NUM = 5;
     static final int INTERVAL = 6;
-    static final int HIDDEN_SIZE = 7;
+    static final int PREVIEW_SIZE = 7;
     static String[] sSizeList = null;
     
     @Override
@@ -127,24 +127,24 @@ public class FloatingCameraPreference extends PreferenceActivity implements OnPr
             intPref.setSummary(intStr + " " + getString(R.string.str_sec));
         }
         
-        //隠しモードサイズ
-        ListPreference hiddenPref = (ListPreference)this.findPreference("preview_size");
-        hiddenPref.setOnPreferenceChangeListener(this);
-        String hiddenStr = getCurrentHiddenSize(this);
+        //プレビューサイズ
+        ListPreference previewPref = (ListPreference)this.findPreference("preview_size");
+        previewPref.setOnPreferenceChangeListener(this);
+        String previewStr = getCurrentPreviewSize(this);
         String summaryStr = getString(R.string.preview_size_summary);
-        if(hiddenStr.equals("1")){
+        if(previewStr.equals("1")){
             summaryStr = getString(R.string.preview_size_large);
         }
-        else if(hiddenStr.equals("2")){
+        else if(previewStr.equals("2")){
             summaryStr = getString(R.string.preview_size_middle);            
         }
-        else if(hiddenStr.equals("3")){
+        else if(previewStr.equals("3")){
             summaryStr = getString(R.string.preview_size_small);            
         }
-        else if(hiddenStr.equals("4")){
+        else if(previewStr.equals("4")){
             summaryStr = getString(R.string.preview_size_none);
         }
-        hiddenPref.setSummary(summaryStr);
+        previewPref.setSummary(summaryStr);
     }
     
     public static String getCurrentEffect(Context c){
@@ -177,14 +177,14 @@ public class FloatingCameraPreference extends PreferenceActivity implements OnPr
                 .getString("interval", /*default*/DEFAULT_INTERVAL);
     }
 
-    public static String getCurrentHiddenSize(Context c){
+    public static String getCurrentPreviewSize(Context c){
         return PreferenceManager.getDefaultSharedPreferences(c)
-                .getString("hidden_size", /*default*/DEFAULT_HIDDEN_SIZE);
+                .getString("preview_size", /*default*/DEFAULT_PREVIEW_SIZE);
     }
     
     public static boolean isSleepMode(Context c){
         return PreferenceManager.getDefaultSharedPreferences(c)
-                .getBoolean("display_sleep", false);
+                .getBoolean("display_sleep", true);
     }
 
 	public boolean onPreferenceChange(Preference pref, Object newValue) {
@@ -239,11 +239,11 @@ public class FloatingCameraPreference extends PreferenceActivity implements OnPr
             this.setResult(INTERVAL, intent);
             finish();
         }
-        else if(pref.getKey().equals("hidden_size")){
+        else if(pref.getKey().equals("preview_size")){
             Intent intent = new Intent();
-            intent.putExtra("hidden_size", Integer.valueOf((String)value));
-            this.setResult(HIDDEN_SIZE, intent);
-            finish();            
+            intent.putExtra("preview_size", Integer.valueOf((String)value));
+            this.setResult(PREVIEW_SIZE, intent);
+            finish();
         }
 		
 		return true;
