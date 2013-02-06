@@ -5,13 +5,11 @@ import java.util.List;
 
 import android.app.Activity;
 import android.app.AlertDialog;
-import android.content.ActivityNotFoundException;
 import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore.Images.Media;
@@ -35,7 +33,6 @@ import android.view.View.OnTouchListener;
 import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.TextView;
-import android.widget.Toast;
 
 //import com.ad_stir.AdstirView;
 //import com.ad_stir.AdstirTerminate;
@@ -128,7 +125,7 @@ public class FloatingCameraActivity extends Activity {
         holder.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
 
         mText = (TextView)findViewById(R.id.text1);
-    	mText.setText(/*mNum + System.getProperty("line.separator") + */"0" + " ");
+    	//mText.setText(/*mNum + System.getProperty("line.separator") + */"0" + " ");
 
     	//連写枚数設定
         String num = FloatingCameraPreference.getCurrentShootNum(this);
@@ -160,8 +157,11 @@ public class FloatingCameraActivity extends Activity {
                         mMode = 1;
                         //撮影中は他のボタンを見えなくする
                         mFocusButton.setVisibility(View.INVISIBLE);
-                        mGalleryButton.setVisibility(View.INVISIBLE);
-                        mSettingButton.setVisibility(View.INVISIBLE);
+                        //mGalleryButton.setVisibility(View.INVISIBLE);
+                        //mSettingButton.setVisibility(View.INVISIBLE);
+                        mGalleryButton.setVisibility(View.GONE);
+                        mSettingButton.setVisibility(View.GONE);
+                        mText.setVisibility(View.VISIBLE);
                     }
                     else{
                         mPreview.stopShooting();
@@ -170,6 +170,9 @@ public class FloatingCameraActivity extends Activity {
                         mFocusButton.setVisibility(View.VISIBLE);
                         mGalleryButton.setVisibility(View.VISIBLE);
                         mSettingButton.setVisibility(View.VISIBLE);
+                        mCount = 0;
+                        mText.setText("0" + " ");
+                        mText.setVisibility(View.INVISIBLE);
                     }
                 }
             }
@@ -454,7 +457,7 @@ public class FloatingCameraActivity extends Activity {
     //オプションメニュー選択時のリスナ
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
-        case MENU_DISP_GALLERY:        	
+        case MENU_DISP_GALLERY:
         	startGallery();
             break;
             
@@ -470,11 +473,20 @@ public class FloatingCameraActivity extends Activity {
     }
     
     private void startGallery(){
-        //明示的intentだとカメラが落ちる場合があったため、暗黙intentに変更
-        Intent intent = new Intent();
-        intent.setType("image/*");
-        intent.setAction(Intent.ACTION_GET_CONTENT);
-        startActivity(intent);
+        new AlertDialog.Builder(FloatingCameraActivity.this)
+        .setTitle(R.string.sc_alert_title)
+        .setMessage(mContext.getString(R.string.sc_alert_gallery))
+        .setPositiveButton(R.string.sc_alert_gallery_ok, new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int which) {
+                //明示的intentだとカメラが落ちる場合があったため、暗黙intentに変更
+                Intent intent = new Intent();
+                intent.setType("image/*");
+                //intent.setAction(Intent.ACTION_GET_CONTENT);
+                intent.setAction(Intent.ACTION_PICK);
+                startActivity(intent);
+            }
+        })
+        .show();
 
         /*
     	// ギャラリー表示
@@ -645,6 +657,7 @@ public class FloatingCameraActivity extends Activity {
         
         mCount = 0;
         mText.setText("0" + " ");
+        mText.setVisibility(View.INVISIBLE);
         mFocusButton.setVisibility(View.VISIBLE);
         mGalleryButton.setVisibility(View.VISIBLE);
         mSettingButton.setVisibility(View.VISIBLE);

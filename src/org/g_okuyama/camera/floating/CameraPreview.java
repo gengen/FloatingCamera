@@ -84,8 +84,10 @@ class CameraPreview implements SurfaceHolder.Callback {
         mWhite = white;
         //mPicIdx = size;
         mSizeStr = size;
-        mWidth = width;
-        mHeight = height;
+        //portraitにするため、widthとheightを逆にする
+        mWidth = height;
+        mHeight = width;
+        Log.d(TAG, "size = " + mWidth + "," + mHeight);
 	}
     
     public void surfaceCreated(SurfaceHolder holder) {
@@ -158,15 +160,8 @@ class CameraPreview implements SurfaceHolder.Callback {
         mSupportList = Reflect.getSupportedPreviewSizes(params);
            
         if (mSupportList != null && mSupportList.size() > 0) {
-            /*
-            for(int i=0;i<mSupportList.size();i++){
-                Log.d(TAG, "SupportedSize = " + mSupportList.get(i).width + "*" + mSupportList.get(i).height);
-            }
-            */
-
             //降順にソート
             Collections.sort(mSupportList, new PreviewComparator());
-
             /*
             for(int i=0;i<mSupportList.size();i++){
                 Log.d(TAG, "SupportedSize = " + mSupportList.get(i).width + "*" + mSupportList.get(i).height);
@@ -187,14 +182,10 @@ class CameraPreview implements SurfaceHolder.Callback {
                 break;
             }
             
-            //Log.d(TAG, "size = " + mSize.width + "*" + mSize.height);
-
             if(mSize == null){
                 mSize = mSupportList.get(0);
                 mOffset = 0;
             }
-            //params.setPreviewSize(mSize.width, mSize.height);
-            //mCamera.setParameters(params);     
         }
     }
     
@@ -218,17 +209,6 @@ class CameraPreview implements SurfaceHolder.Callback {
 
         //止めないでsetParameters()するとエラーとなる場合があるため止める
         mCamera.stopPreview();
-
-        /*
-        //if(mFocusFlag){
-        	mFocus = new AutoFocusCallback(){
-        		public void onAutoFocus(boolean success, Camera camera) {
-        			//mCamera.setOneShotPreviewCallback(mPreviewCallback);
-        			mCamera.setPreviewCallback(mPreviewCallback);
-        		}
-        	};
-        //}
-        */
         
         //設定画面で設定したとき
         if(mSetValue != null){
@@ -266,7 +246,6 @@ class CameraPreview implements SurfaceHolder.Callback {
         
         setAllParameters();
 
-        //mPreviewCallback = new PreviewCallback(this);
         mCamera.startPreview();
         //focus
         mFocus = new AutoFocusCallback(){
@@ -283,15 +262,6 @@ class CameraPreview implements SurfaceHolder.Callback {
     
     private void setAllParameters(){
         Camera.Parameters param = mCamera.getParameters();
-        
-        /*
-        param.setColorEffect(mEffect);            
-        param.setSceneMode(mScene);
-        param.setWhiteBalance(mWhite);
-        mSize = mSupportList.get(mOffset + mPicIdx);        
-        param.setPreviewSize(mSize.width, mSize.height);
-        mCamera.setParameters(param);
-        */
 
         //一度に複数のパラメータを設定すると落ちる端末があるため、1つずつ設定する
         try{

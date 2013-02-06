@@ -9,6 +9,9 @@
     <string name="sc_alert_title">通知</string>
     <string name="sc_alert_sd">SDカードが利用できません</string>
     <string name="sc_alert_ok">確認（アプリ終了）</string>
+    
+    <string name="sc_alert_gallery">サムネイルを表示します。\n編集・削除などはギャラリーアプリから行ってください</string>
+    <string name="sc_alert_gallery_ok">はい</string>
 
     <string name="sc_error_title">エラー</string>
     <string name="sc_error_cam">カメラが起動できません</string>
