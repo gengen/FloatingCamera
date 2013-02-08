@@ -75,6 +75,7 @@
         	android:key="@string/display_sleep"
             android:title="@string/display_sleep_title"
         	android:summary="@string/display_sleep_summary"
+        	android:defaultValue="true"
         	>
         </CheckBoxPreference>
 	</PreferenceCategory>   
