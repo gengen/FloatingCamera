@@ -34,6 +34,7 @@
             android:name="org.g_okuyama.camera.floating.FloatingCameraPreference"
 	    	android:screenOrientation="portrait">
         </activity>
+        <meta-data android:name="i-mobile_Publisher_ID" android:value="8076" />
     </application>
 
 </manifest>

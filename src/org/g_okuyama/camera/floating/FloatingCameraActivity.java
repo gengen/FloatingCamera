@@ -32,10 +32,11 @@ import android.view.View.OnClickListener;
 import android.view.View.OnTouchListener;
 import android.widget.FrameLayout;
 import android.widget.ImageButton;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
-//import com.ad_stir.AdstirView;
-//import com.ad_stir.AdstirTerminate;
+import com.ad_stir.AdstirView;
+import com.ad_stir.AdstirTerminate;
 
 public class FloatingCameraActivity extends Activity {
     private static final String TAG = "FloatingCamera";
@@ -88,7 +89,7 @@ public class FloatingCameraActivity extends Activity {
     ScaleGestureDetector mScaleGesture;
     float mSpanPrev = 0.0f;
     
-    //private AdstirView mAdstirView = null;
+    private AdstirView mAdstirView = null;
     
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -673,7 +674,7 @@ public class FloatingCameraActivity extends Activity {
         
         //adstirê›íËÅ®onCreateÇ©ÇÁonResumeÇ…à⁄ìÆ
         /*
-        mAdstirView = new AdstirView(this, "74792bcf", 1);
+        mAdstirView = new AdstirView(this, "MEDIA-5efb0933", 1);
         LinearLayout layout = (LinearLayout)findViewById(R.id.adspace);
         layout.addView(mAdstirView);
         */
