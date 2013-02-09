@@ -381,7 +381,7 @@ public class FloatingCameraActivity extends Activity {
     class MySimpleOnScaleGestureListener extends SimpleOnScaleGestureListener {   
         @Override  
         public boolean onScale(ScaleGestureDetector detector) {   
-            Log.d(TAG, "onScale");
+            //Log.d(TAG, "onScale");
             // 2つの指の距離を使って遊びを持たせる（一定の距離以下ならピンチとみなさない）
             /*
             float spanCurr = detector.getCurrentSpan();
@@ -405,7 +405,7 @@ public class FloatingCameraActivity extends Activity {
 
         @Override
         public boolean onScaleBegin(ScaleGestureDetector detector) {
-            Log.d(TAG, "onScaleBegin");
+            //Log.d(TAG, "onScaleBegin");
             isPinch = true;
             return super.onScaleBegin(detector);
         }
@@ -420,7 +420,7 @@ public class FloatingCameraActivity extends Activity {
              * 次回のonScrollではレイアウトを変更しないようにする。
              */
             mScaleEndFlag = true;
-            Log.d(TAG, "onScaleEnd");
+            //Log.d(TAG, "onScaleEnd");
         }
     }
     
@@ -644,7 +644,7 @@ public class FloatingCameraActivity extends Activity {
     }
     
     protected void onPause(){
-        Log.d(TAG, "enter ContShooting#onPause");
+        //Log.d(TAG, "enter ContShooting#onPause");
     	super.onPause();
     	
     	if(mSleepFlag){
@@ -670,14 +670,12 @@ public class FloatingCameraActivity extends Activity {
     protected void onResume(){
         super.onResume();
         
-        Log.d(TAG, "onResume");
+        //Log.d(TAG, "onResume");
         
         //adstir設定→onCreateからonResumeに移動
-        /*
         mAdstirView = new AdstirView(this, "MEDIA-5efb0933", 1);
         LinearLayout layout = (LinearLayout)findViewById(R.id.adspace);
         layout.addView(mAdstirView);
-        */
                 
         if(FloatingCameraPreference.isSleepMode(this)){
             if(!mSleepFlag){
@@ -694,9 +692,9 @@ public class FloatingCameraActivity extends Activity {
     }
     
     protected void onDestroy(){
-        Log.d(TAG, "enter ContShooting#onDestroy");
+        //Log.d(TAG, "enter ContShooting#onDestroy");
     	super.onDestroy();
-    	//AdstirTerminate.init(this);
+    	AdstirTerminate.init(this);
     }
     
     protected void onRestart(){
