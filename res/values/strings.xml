@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Floating Camera</string>
-    <string name="sc_hidden">Hidden mode now</string>
+    <string name="app_name">Super Spy Camera</string>
     <string name="sc_menu_gallery">gallery</string>
     <string name="sc_menu_gallery_ng">Coundn\'t launch gallery.</string>
     <string name="sc_menu_setting">settings</string>
@@ -56,8 +55,8 @@
 
     <string name="preview_size">preview_size</string>
 	<string name="preview_size_title">Preview size</string>
-	<string name="dialog_preview_size_title">Hidden mode size</string>
-	<string name="preview_size_summary">Set hidden mode preview size</string>
+	<string name="dialog_preview_size_title">Preview size</string>
+	<string name="preview_size_summary">Set preview size when launching app</string>
 	<string name="preview_size_large">large</string>
 	<string name="preview_size_middle">middle</string>
 	<string name="preview_size_small">small</string>
