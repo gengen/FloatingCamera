@@ -96,7 +96,7 @@ public class ImageAsyncTask extends AsyncTask<Bitmap, Void, Bitmap> {
     public void savedata(byte[] data){
         File mFile = null;
         if(mFile == null){
-            mFile = new File(Environment.getExternalStorageDirectory(), "/FloatingCamera");
+            mFile = new File(Environment.getExternalStorageDirectory(), "/SuperSpyCamera");
         }
 
         FileOutputStream fos = null;
