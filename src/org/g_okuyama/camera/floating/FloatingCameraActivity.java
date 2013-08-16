@@ -157,7 +157,7 @@ public class FloatingCameraActivity extends Activity {
                         mPreview.resumeShooting();
                         mMode = 1;
                         //ŽB‰e’†‚Í‘¼‚Ìƒ{ƒ^ƒ“‚ðŒ©‚¦‚È‚­‚·‚é
-                        mFocusButton.setVisibility(View.INVISIBLE);
+                        //mFocusButton.setVisibility(View.INVISIBLE);
                         //mGalleryButton.setVisibility(View.INVISIBLE);
                         //mSettingButton.setVisibility(View.INVISIBLE);
                         mGalleryButton.setVisibility(View.GONE);
@@ -168,7 +168,7 @@ public class FloatingCameraActivity extends Activity {
                         mPreview.stopShooting();
                         mMode = 0;
                         //‘¼‚Ìƒ{ƒ^ƒ“‚ðŒ©‚¦‚é‚æ‚¤‚É‚·‚é
-                        mFocusButton.setVisibility(View.VISIBLE);
+                        //mFocusButton.setVisibility(View.VISIBLE);
                         mGalleryButton.setVisibility(View.VISIBLE);
                         mSettingButton.setVisibility(View.VISIBLE);
                         mCount = 0;

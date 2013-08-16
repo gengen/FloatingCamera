@@ -250,13 +250,19 @@ class CameraPreview implements SurfaceHolder.Callback {
         //focus
         mFocus = new AutoFocusCallback(){
             public void onAutoFocus(boolean success, Camera camera) {
-                mPreviewCallback = new PreviewCallback(CameraPreview.this);
+                //フォーカスエフェクトを消す
+                if(mPreviewCallback == null){
+                    mPreviewCallback = new PreviewCallback(CameraPreview.this);
+                }
             }
         };
+
         try{
             mCamera.autoFocus(mFocus);
         }catch(Exception e){
-            mPreviewCallback = new PreviewCallback(CameraPreview.this);            
+            if(mPreviewCallback == null){
+                mPreviewCallback = new PreviewCallback(CameraPreview.this);
+            }
         }
     }
     
@@ -322,11 +328,13 @@ class CameraPreview implements SurfaceHolder.Callback {
 
     void doAutoFocus(){
     	if(mCamera != null && mFocus != null){
-            mCamera.setPreviewCallback(null);
+            //mCamera.setPreviewCallback(null);
     		try{
     			mCamera.autoFocus(mFocus);
     		}catch(Exception e){
-    			mPreviewCallback = new PreviewCallback(CameraPreview.this);            
+                if(mPreviewCallback == null){
+                    mPreviewCallback = new PreviewCallback(CameraPreview.this);
+                }
     		}
     	}
     }    
