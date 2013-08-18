@@ -176,6 +176,11 @@ public class FloatingCameraPreference extends PreferenceActivity implements OnPr
         return PreferenceManager.getDefaultSharedPreferences(c)
                 .getString("interval", /*default*/DEFAULT_INTERVAL);
     }
+    
+    public static boolean isAutoShoot(Context c){
+    	return PreferenceManager.getDefaultSharedPreferences(c)
+    			.getBoolean("auto_shoot", false);
+    }
 
     public static String getCurrentPreviewSize(Context c){
         return PreferenceManager.getDefaultSharedPreferences(c)
