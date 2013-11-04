@@ -25,14 +25,12 @@
 	    android:orientation="vertical"
 	    >
 
-		<LinearLayout
-			android:id="@+id/adspace"
-    		android:layout_width="wrap_content"
-    		android:layout_height="50sp"
-    		android:layout_gravity="center_horizontal"
-   	   		android:background="#000000"
-		>
-		</LinearLayout>
+	<com.ad_stir.webview.AdstirWebView  
+  		media="MEDIA-4b8c4112"
+  		spot="1"
+  		refresh_interval="20"
+  		android:layout_width="fill_parent"
+  		android:layout_height="wrap_content" />
 	    
 		<FrameLayout
        		android:layout_width="fill_parent"

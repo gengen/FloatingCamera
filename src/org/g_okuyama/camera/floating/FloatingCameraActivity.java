@@ -35,9 +35,6 @@ import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
-import com.ad_stir.AdstirView;
-import com.ad_stir.AdstirTerminate;
-
 public class FloatingCameraActivity extends Activity {
     private static final String TAG = "FloatingCamera";
     
@@ -89,8 +86,6 @@ public class FloatingCameraActivity extends Activity {
     
     ScaleGestureDetector mScaleGesture;
     float mSpanPrev = 0.0f;
-    
-    private AdstirView mAdstirView = null;
     
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -692,11 +687,6 @@ public class FloatingCameraActivity extends Activity {
         super.onResume();
         
         //Log.d(TAG, "onResume");
-        
-        //adstirê›íËÅ®onCreateÇ©ÇÁonResumeÇ…à⁄ìÆ
-        mAdstirView = new AdstirView(this, "MEDIA-5efb0933", 1);
-        LinearLayout layout = (LinearLayout)findViewById(R.id.adspace);
-        layout.addView(mAdstirView);
                 
         if(FloatingCameraPreference.isSleepMode(this)){
             if(!mSleepFlag){
@@ -715,7 +705,6 @@ public class FloatingCameraActivity extends Activity {
     protected void onDestroy(){
         //Log.d(TAG, "enter ContShooting#onDestroy");
     	super.onDestroy();
-    	AdstirTerminate.init(this);
     }
     
     protected void onRestart(){
